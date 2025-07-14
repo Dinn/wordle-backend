@@ -127,4 +127,3 @@ src/main/kotlin/com/example/wordle/
 
 ---
 
-> 이 README는 언제든 업데이트 가능합니다. 읽다가 헷갈렸다면 Issue 또는 PR로 피드백 주세요!

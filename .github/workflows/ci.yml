@@ -1,0 +1,16 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: Build & Test
+        run: ./gradlew ktlintCheck detekt test
+
+      - name: Build container (no push)
+        run: ./gradlew jibDockerBuild

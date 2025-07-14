@@ -1,0 +1,10 @@
+# Gradle
+.gradle/
+build/
+
+# IntelliJ / VSCode
+.idea/
+.vscode/
+
+# Docker
+db-data/

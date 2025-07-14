@@ -8,3 +8,14 @@ build/
 
 # Docker
 db-data/
+
+# IDE & Gradle
+.idea/
+.gradle/
+build/
+
+# Testcontainers 데이터
+testcontainers/
+
+# OS
+.DS_Store

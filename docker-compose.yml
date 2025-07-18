@@ -1,27 +1,53 @@
 version: "3.9"
+
 services:
+  # ────────────────────────────
+  # ① PostgreSQL
+  # ────────────────────────────
   db:
     image: postgres:16
+    container_name: wordle-db
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: secret
       POSTGRES_DB: wordle
-    volumes: ["db-data:/var/lib/postgresql/data"]
-    ports: ["5432:5432"]
-    healthcheck: { test: ["CMD-SHELL","pg_isready -U app"], interval: 5s }
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d wordle"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/postgresql/data
 
+  # ────────────────────────────
+  # ② Redis (캐시·랭킹)
+  # ────────────────────────────
   redis:
     image: redis:7
-    ports: ["6379:6379"]
+    container_name: wordle-redis
+    ports:
+      - "6379:6379"
 
+  # ────────────────────────────
+  # ③ Kotlin Spring Boot 앱
+  # ────────────────────────────
   app:
     build: .
+    container_name: wordle-app
+    ports:
+      - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: dev
       DB_URL: jdbc:postgresql://db:5432/wordle
       DB_USER: app
       DB_PASS: secret
-    depends_on: { db: { condition: service_healthy }, redis: {} }
-    ports: ["8080:8080"]
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - db
+      - redis
 
-volumes: { db-data: {} }
+volumes:
+  db-data:

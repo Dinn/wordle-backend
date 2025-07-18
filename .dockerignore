@@ -1,0 +1,7 @@
+# 로컬 캐시·설정 제외 → 빌드 사이즈·속도 최적
+.git/
+.gradle/
+build/
+.idea/
+.vscode/
+**/*.log

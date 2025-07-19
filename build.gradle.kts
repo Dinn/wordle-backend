@@ -28,6 +28,8 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
 
     /* ───── 테스트 ───── */
     testImplementation("org.springframework.boot:spring-boot-starter-test")

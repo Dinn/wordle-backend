@@ -1,7 +1,7 @@
-CREATE TABLE word_list (word CHAR(5) PRIMARY KEY);
-COPY word_list(word) FROM STDIN;
-APPLE
-ABOUT
-ALERT
-...
-\.
+CREATE TABLE IF NOT EXISTS puzzle (
+  id SERIAL PRIMARY KEY,
+  answer VARCHAR(5) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+INSERT INTO puzzle(answer) VALUES ('apple'), ('table'), ('chair');

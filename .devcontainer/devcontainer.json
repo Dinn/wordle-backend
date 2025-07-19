@@ -1,18 +1,19 @@
 {
-  "name": "wordle-dev",
-  "dockerComposeFile": ["../docker-compose.yml"],
-  "service": "app",
+  "name": "wordle-backend-dev",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "backend",
   "workspaceFolder": "/workspace",
   "customizations": {
     "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
       "extensions": [
-        "fwcd.kotlin",
-        "vscjava.vscode-gradle",
+        "vscjava.vscode-spring-boot-dev-pack",
+        "mathiasfrohlich.kotlin",
         "ms-azuretools.vscode-docker"
       ]
     }
   },
-  "postCreateCommand": "./gradlew ktlintFormat",
-  "forwardPorts": [8080],
-  "remoteEnv": { "SPRING_PROFILES_ACTIVE": "dev" }
+  "postCreateCommand": "./gradlew test"
 }

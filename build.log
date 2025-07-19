@@ -1,0 +1,43 @@
+--progress is a global compose flag, better use `docker compose --progress xx build ...
+time="2025-07-18T16:14:05+09:00" level=warning msg="/home/protove/vsc/Wordle/wordle-backend/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+#1 [internal] load local bake definitions
+#1 reading from stdin 403B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile:
+#2 transferring dockerfile: 829B done
+#2 DONE 0.3s
+
+#3 [internal] load metadata for docker.io/library/gradle:8.5-jdk21
+#3 ...
+
+#4 [internal] load metadata for docker.io/library/eclipse-temurin:21-jre
+#4 ERROR: Canceled: grpc: the client connection is closing
+
+#3 [internal] load metadata for docker.io/library/gradle:8.5-jdk21
+#3 ERROR: Canceled: grpc: the client connection is closing
+------
+ > [internal] load metadata for docker.io/library/eclipse-temurin:21-jre:
+------
+------
+ > [internal] load metadata for docker.io/library/gradle:8.5-jdk21:
+------
+Dockerfile:18
+
+--------------------
+
+  16 |     
+
+  17 |     # ──────────────────── 2) Runtime Stage ────────────────────
+
+  18 | >>> FROM eclipse-temurin:21-jre
+
+  19 |     WORKDIR /app
+
+  20 |     COPY --from=builder /workspace/build/libs/*.jar app.jar
+
+--------------------
+
+failed to solve: Canceled: grpc: the client connection is closing
+

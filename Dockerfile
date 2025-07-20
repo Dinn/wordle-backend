@@ -10,20 +10,7 @@ RUN apt-get update && apt-get install -y \
     openjdk-21-jdk \
     && rm -rf /var/lib/apt/lists/*
 
-# 프로젝트 파일 복사
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
-
-# gradlew 실행 권한 부여
-RUN chmod +x gradlew
-
-# 의존성 다운로드 (캐싱 최적화)
-RUN ./gradlew dependencies --no-daemon
-
-# 소스코드 복사 및 빌드
-COPY src src
+COPY . .
 RUN ./gradlew clean bootJar -x test --no-daemon
 
 # -------- Runtime stage (JRE 21) --------

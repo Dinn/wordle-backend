@@ -1,6 +1,9 @@
 # -------- Build stage --------
-FROM debian:12-slim AS build
+FROM ubuntu:24.04 AS build
 WORKDIR /app
+
+# 시간대 설정 (상호작용 방지)
+ENV DEBIAN_FRONTEND=noninteractive
 
 # OpenJDK 21 설치
 RUN apt-get update && apt-get install -y \
@@ -24,8 +27,11 @@ COPY src src
 RUN ./gradlew clean bootJar -x test --no-daemon
 
 # -------- Runtime stage (JRE 21) --------
-FROM debian:12-slim
+FROM ubuntu:24.04
 WORKDIR /app
+
+# 시간대 설정 (상호작용 방지)
+ENV DEBIAN_FRONTEND=noninteractive
 
 # OpenJDK 21 JRE 설치
 RUN apt-get update && apt-get install -y \

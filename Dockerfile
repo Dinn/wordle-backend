@@ -1,12 +1,17 @@
-# -------- Build stage --------
-FROM gradle:8.5-jdk21-alpine AS build
+# ---------- 1️⃣ Build Stage ----------
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
-COPY . .
-RUN gradle clean bootJar -x test
+COPY gradlew .
+COPY gradle ./gradle
+COPY build.gradle.kts settings.gradle.kts ./
+COPY src ./src
+RUN ./gradlew bootJar --no-daemon
 
-# -------- Runtime stage (JRE 21) --------
-FROM eclipse-temurin:21-jre-alpine
+# ---------- 2️⃣ Runtime Stage ----------
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+ENV SPRING_PROFILES_ACTIVE=prod \
+    TZ=Asia/Seoul
+COPY --from=builder /app/build/libs/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]

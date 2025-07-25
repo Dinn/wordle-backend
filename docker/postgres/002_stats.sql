@@ -1,4 +1,5 @@
-CREATE TABLE player_stats (
+-- Wordle 통계 테이블
+CREATE TABLE IF NOT EXISTS player_stats (
   user_id      UUID PRIMARY KEY,
   games        INT  DEFAULT 0,
   wins         INT  DEFAULT 0,

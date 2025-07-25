@@ -1,17 +1,35 @@
-# ---------- 1️⃣ Build Stage ----------
-FROM eclipse-temurin:21-jdk AS builder
-WORKDIR /app
-COPY gradlew .
-COPY gradle ./gradle
-COPY build.gradle.kts settings.gradle.kts ./
-COPY src ./src
-RUN ./gradlew bootJar --no-daemon
+#######################################################################
+# Wordle-backend ‖ Multi-Arch, License-Free Dockerfile
+# ----------------------------------------------------
+# • Build  : Gradle 8.5 + Temurin JDK 21   (Apache 2.0 / EPL 2.0)
+# • Runtime: Temurin JRE 21               (EPL 2.0 OR GPLv2+CE)
+# • Works   on linux/amd64 (Intel/AMD) and linux/arm64 (Apple Silicon)
+#######################################################################
 
-# ---------- 2️⃣ Runtime Stage ----------
-FROM eclipse-temurin:21-jre
+############### 1️⃣ Build Stage #######################################
+FROM --platform=${BUILDPLATFORM} gradle:8.5-jdk21 AS build
+
 WORKDIR /app
-ENV SPRING_PROFILES_ACTIVE=prod \
-    TZ=Asia/Seoul
-COPY --from=builder /app/build/libs/*.jar app.jar
+
+# Copy everything (Docker-layer cache hits on unchanged files)
+COPY . .
+
+# Produce an executable JAR (tests 생략 → 빨리 빌드)
+RUN ./gradlew clean bootJar -x test
+
+############### 2️⃣ Runtime Stage #####################################
+FROM --platform=${TARGETPLATFORM} eclipse-temurin:21-jre
+
+# 명시적 라이선스 라벨(SBOM · 리뷰 용이)
+LABEL org.opencontainers.image.licenses="EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0"
+
+WORKDIR /app
+
+# 빌드한 JAR 복사
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# 애플리케이션 포트
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+
+# 컨테이너 시작 시 실행할 명령
+ENTRYPOINT ["java","-jar","/app/app.jar"]

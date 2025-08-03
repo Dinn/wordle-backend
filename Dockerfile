@@ -1,11 +1,3 @@
-#######################################################################
-# Wordle-backend ‖ Multi-Arch, License-Free Dockerfile
-# ----------------------------------------------------
-# • Build  : Gradle 8.5 + Temurin JDK 21   (Apache 2.0 / EPL 2.0)
-# • Runtime: Temurin JRE 21               (EPL 2.0 OR GPLv2+CE)
-# • Works   on linux/amd64 (Intel/AMD) and linux/arm64 (Apple Silicon)
-#######################################################################
-
 ############### 1️⃣ Build Stage #######################################
 FROM --platform=${BUILDPLATFORM} gradle:8.5-jdk21 AS build
 
@@ -13,6 +5,14 @@ WORKDIR /app
 
 # Copy everything (Docker-layer cache hits on unchanged files)
 COPY . .
+
+# [추가 1] gradlew 파일에 실행 권한 부여
+RUN chmod +x ./gradlew
+
+# [추가 2] Windows 줄 바꿈 문자(CRLF)를 Unix(LF)로 변환
+# dos2unix가 없을 수 있으므로 설치 후 실행합니다.
+RUN apt-get update && apt-get install -y dos2unix
+RUN dos2unix ./gradlew
 
 # Produce an executable JAR (tests 생략 → 빨리 빌드)
 RUN ./gradlew clean bootJar -x test

@@ -22,9 +22,16 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.postgresql:postgresql:42.7.3")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    
+    /* ─ Database ─ */
+    runtimeOnly("org.postgresql:postgresql")
+    
+    /* ─ OAuth 2.0 & JWT ─ */
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-authorization-server")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.security:spring-security-oauth2-jose")
 
     /* ─ 테스트 ─ */
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
@@ -33,6 +40,7 @@ dependencies {
         exclude(group = "org.mockito", module = "mockito-inline")
     }
     testImplementation("com.h2database:h2")  // H2 데이터베이스 추가
+    testImplementation("org.springframework.security:spring-security-test")
 }
 
 springBoot { mainClass.set("com.example.wordle.WordleApplicationKt") }

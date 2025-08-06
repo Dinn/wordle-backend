@@ -12,13 +12,13 @@ class User(
     @Id
     val id: UUID = UUID.randomUUID(),
     
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 20)
     private val username: String,
     
-    @Column(nullable = false)
+    @Column(nullable = false, length = 60)
     private val password: String,
     
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 100)
     val email: String,
     
     @Column(nullable = false)

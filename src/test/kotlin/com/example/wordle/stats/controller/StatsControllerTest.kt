@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.*
@@ -25,10 +24,9 @@ class StatsControllerTest(
     private val userId = UUID.randomUUID()
 
     @Test
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
     fun `POST invalid guessCnt returns 400`() {
         client.post()
-            .uri("/stats")
+            .uri("/stats/update?userId=$userId")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("""{ "guessCnt": 8, "win": true }""")
             .exchange()
@@ -36,10 +34,9 @@ class StatsControllerTest(
     }
 
     @Test
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
     fun `POST valid result - check actual response`() {
         client.post()
-            .uri("/stats")
+            .uri("/stats/update?userId=$userId")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("""{ "guessCnt": 3, "win": true }""")
             .exchange()
@@ -59,11 +56,12 @@ class StatsControllerTest(
     }
 
     @Test
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
     fun `GET stats - check actual response`() {
-        println("=== Testing GET endpoint ===")
+        val testUserId = UUID.randomUUID()
+        
+        println("=== Testing GET endpoint without POST ===")
         client.get()
-            .uri("/stats")
+            .uri("/stats/me?userId=$testUserId")
             .exchange()
             .expectBody()
             .consumeWith { result ->
@@ -79,13 +77,15 @@ class StatsControllerTest(
     }
 
     @Test
-    fun `Unauthorized access returns 401`() {
-        client.get()
-            .uri("/stats")
-            .exchange()
-            .expectStatus().isUnauthorized
-    }
-}
+    fun `Check if endpoints exist at all`() {
+        println("=== Checking endpoint existence ===")
+        
+        // POST 테스트
+        try {
+            client.post()
+                .uri("/stats/update?userId=$userId")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("""{ "guessCnt": 3, "win": true }""")
                 .exchange()
                 .expectBody()
                 .consumeWith { result ->

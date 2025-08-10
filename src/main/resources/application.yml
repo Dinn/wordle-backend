@@ -7,9 +7,6 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
-  redis:
-    host: ${SPRING_REDIS_HOST}
-    port: 6379
 
 management:
   endpoints:

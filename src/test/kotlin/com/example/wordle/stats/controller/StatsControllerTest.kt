@@ -16,14 +16,13 @@ import java.util.*
     "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-    "spring.security.oauth2.authorizationserver.key-store=classpath:test-keystore.p12",
-    "spring.security.oauth2.authorizationserver.key-store-password=changeit",
-    "spring.security.oauth2.authorizationserver.key-alias=oauth-key"
+    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
 ])
 class StatsControllerTest(
     @Autowired val client: WebTestClient
 ) {
+
+    private val userId = UUID.randomUUID()
 
     @Test
     @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
@@ -87,6 +86,7 @@ class StatsControllerTest(
             .expectStatus().isUnauthorized
     }
 }
+                .exchange()
                 .expectBody()
                 .consumeWith { result ->
                     println("POST exists - Status: ${result.status.value()}")

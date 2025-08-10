@@ -48,7 +48,7 @@ class JwtSecurityConfig {
         return http
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/login", "/error", "/auth/signup").permitAll()
+                    .requestMatchers("/login", "/error").permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { form ->

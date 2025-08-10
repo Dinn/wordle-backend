@@ -1,6 +1,6 @@
 -- Spring Authorization Server Schema
 
-CREATE TABLE IF NOT EXISTS oauth2_registered_client (
+CREATE TABLE oauth2_registered_client (
     id varchar(100) NOT NULL,
     client_id varchar(100) NOT NULL,
     client_id_issued_at timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -17,10 +17,7 @@ CREATE TABLE IF NOT EXISTS oauth2_registered_client (
     PRIMARY KEY (id)
 );
 
--- 클라이언트 ID 중복 방지를 위한 고유 인덱스
-CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth2_registered_client_id ON oauth2_registered_client(client_id);
-
-CREATE TABLE IF NOT EXISTS oauth2_authorization (
+CREATE TABLE oauth2_authorization (
     id varchar(100) NOT NULL,
     registered_client_id varchar(100) NOT NULL,
     principal_name varchar(200) NOT NULL,
@@ -57,7 +54,7 @@ CREATE TABLE IF NOT EXISTS oauth2_authorization (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS oauth2_authorization_consent (
+CREATE TABLE oauth2_authorization_consent (
     registered_client_id varchar(100) NOT NULL,
     principal_name varchar(200) NOT NULL,
     authorities varchar(1000) NOT NULL,
@@ -65,7 +62,7 @@ CREATE TABLE IF NOT EXISTS oauth2_authorization_consent (
 );
 
 -- Users table for authentication
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,

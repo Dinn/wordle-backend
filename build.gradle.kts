@@ -22,6 +22,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")  // 추가
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     
     /* ─ Database ─ */
@@ -39,7 +40,7 @@ dependencies {
         exclude(group = "org.mockito", module = "mockito-junit-jupiter")
         exclude(group = "org.mockito", module = "mockito-inline")
     }
-    testImplementation("com.h2database:h2")  // H2 데이터베이스 추가
+    testImplementation("com.h2database:h2")
     testImplementation("org.springframework.security:spring-security-test")
 }
 

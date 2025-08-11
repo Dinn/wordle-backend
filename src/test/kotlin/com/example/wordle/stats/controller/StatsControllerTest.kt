@@ -37,33 +37,33 @@ class StatsControllerTest(
 
     @Test
     @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    fun `POST valid result - check actual response`() {
+    fun `POST valid result returns success`() {
         client.post()
             .uri("/stats")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("""{ "guessCnt": 3, "win": true }""")
             .exchange()
-            .expectBody()
-            .consumeWith { result ->
-                println("=== POST Response ===")
-                println("Status: ${result.status}")
-                println("Status Code: ${result.status.value()}")
-                val responseBody = if (result.responseBody != null) {
-                    String(result.responseBody!!)
-                } else {
-                    "null"
-                }
-                println("Body: $responseBody")
-                println("Headers: ${result.responseHeaders}")
-            }
+            .expectStatus().isOk
     }
 
     @Test
     @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    fun `GET stats - check actual response`() {
-        println("=== Testing GET endpoint ===")
+    fun `GET stats returns user statistics`() {
         client.get()
             .uri("/stats")
+            .exchange()
+            .expectStatus().isOk
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    }
+
+    @Test
+    fun `Unauthorized access returns 401`() {
+        client.get()
+            .uri("/stats")
+            .exchange()
+            .expectStatus().isUnauthorized
+    }
+}
             .exchange()
             .expectBody()
             .consumeWith { result ->

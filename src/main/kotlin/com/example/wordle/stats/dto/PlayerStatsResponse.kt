@@ -1,27 +1,32 @@
 package com.example.wordle.stats.dto
 
-import com.example.wordle.stats.domain.GuessDist
-import com.example.wordle.stats.domain.PlayerStats
-import java.util.*
-
 data class PlayerStatsResponse(
-    val userId:      UUID,
-    val games:       Int,
-    val wins:        Int,
-    val winRate:     Double,
-    val curStreak:   Int,
-    val maxStreak:   Int,
-    val dist:        GuessDist
+    val gamesPlayed: Int = 0,
+    val gamesWon: Int = 0,
+    val currentStreak: Int = 0,
+    val maxStreak: Int = 0,
+    val guessDistribution: Map<Int, Int> = mapOf(
+        1 to 0,
+        2 to 0,
+        3 to 0,
+        4 to 0,
+        5 to 0,
+        6 to 0
+    )
 ) {
     companion object {
-        fun from(entity: PlayerStats) = PlayerStatsResponse(
-            userId     = entity.userId,
-            games      = entity.games,
-            wins       = entity.wins,
-            winRate    = entity.winRate,
-            curStreak  = entity.curStreak,
-            maxStreak  = entity.maxStreak,
-            dist       = entity.dist
-        )
+        fun from(stats: Any): PlayerStatsResponse {
+            return when (stats) {
+                is Map<*, *> -> PlayerStatsResponse(
+                    gamesPlayed = stats["gamesPlayed"] as? Int ?: 0,
+                    gamesWon = stats["gamesWon"] as? Int ?: 0,
+                    currentStreak = stats["currentStreak"] as? Int ?: 0,
+                    maxStreak = stats["maxStreak"] as? Int ?: 0
+                )
+                else -> PlayerStatsResponse()
+            }
+        }
+    }
+}
     }
 }

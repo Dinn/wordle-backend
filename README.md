@@ -61,4 +61,8 @@ curl http://localhost:8081/actuator/health    # {"status":"UP"}
 
 ---
 
-### Happy Coding! 🚀
+# Wordle Backend 프로젝트 구조 분석
+
+## 📁 프로젝트 구조
+
+`````

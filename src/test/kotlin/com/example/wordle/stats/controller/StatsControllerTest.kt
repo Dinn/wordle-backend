@@ -8,7 +8,6 @@ import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
-import java.util.*
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -86,6 +85,7 @@ class StatsControllerTest(
             .exchange()
             .expectStatus().isUnauthorized
     }
+}
 }
                 .expectBody()
                 .consumeWith { result ->

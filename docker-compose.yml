@@ -27,8 +27,6 @@ services:
       POSTGRES_PASSWORD: wordle
       TZ: Asia/Seoul
     volumes:
-      # 디렉터리 전체를 init 폴더로 마운트
-      - ./docker/postgres/:/docker-entrypoint-initdb.d/:ro
       # 데이터 영속 볼륨
       - postgres_data:/var/lib/postgresql/data
     healthcheck:                 # pg_isready 로 헬스 확인
@@ -40,23 +38,20 @@ services:
       - wordle-net
     ports:
       - "5432:5432"
-
   # ---------- ② Spring Backend ----------
   backend:
     build:
       context: .                 # 루트에 있는 Dockerfile 사용
       dockerfile: Dockerfile
-      # 필요 시 빌드 목표 아키텍처 지정 (CI에서 유용)
-      # platforms:
-      #   - linux/amd64
-      #   - linux/arm64
     restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
       SPRING_PROFILES_ACTIVE: dev
       TZ: Asia/Seoul
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/wordle
       SPRING_DATASOURCE_USERNAME: wordle
       SPRING_DATASOURCE_PASSWORD: wordle
+      GRADLE_USER_HOME: /workspace/.gradle
     depends_on:
       db:
         condition: service_healthy
@@ -74,3 +69,4 @@ services:
       - wordle-net
     ports:
       - "8080:8080"
+    entrypoint: ["sh", "-c", "sh /workspace/docker/entrypoint.sh"]

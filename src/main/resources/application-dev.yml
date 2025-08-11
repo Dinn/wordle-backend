@@ -2,11 +2,14 @@ spring:
   datasource:
     url: jdbc:postgresql://db:5432/wordle
     username: wordle
-    password: pwd
+    password: wordle
   jpa:
     hibernate:
       ddl-auto: create-drop
-    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
   security:
     oauth2:
       authorizationserver:
@@ -17,14 +20,15 @@ spring:
 management:
   endpoints:
     web:
-      base-path: /actuator
       exposure:
-        include: health, info
+        include: health, info, beans
   endpoint:
     health:
-      show-details: never
+      show-details: always
 
 logging:
   level:
-    org.springframework.security: INFO
-    com.example.wordle: INFO
+    org.springframework.security: DEBUG
+    com.example.wordle: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

@@ -14,10 +14,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
     "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-    "spring.security.oauth2.authorizationserver.key-store=classpath:test-keystore.p12",
-    "spring.security.oauth2.authorizationserver.key-store-password=changeit",
-    "spring.security.oauth2.authorizationserver.key-alias=test-key"
+    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
 ])
 class AuthControllerTest(
     @Autowired val client: WebTestClient

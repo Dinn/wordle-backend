@@ -75,7 +75,7 @@ class AuthorizationServerConfig {
         // 클라이언트 중복 저장 방지 - 기존 클라이언트 존재 여부 확인
         val existingClient = repository.findByClientId("wordle-client")
         if (existingClient == null) {
-            val client = RegisteredClient.withId("wordle-client-id")  // 고정 ID 사용
+            val client = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId("wordle-client")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)

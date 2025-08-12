@@ -224,7 +224,56 @@ curl -H "Authorization: Bearer <ACCESS_TOKEN>" \
 
 ---
 
-## 📊 데이터베이스
+## � 보안
+
+### 보안 기능
+
+| 기능 | 구현 상태 | 설명 |
+|------|-----------|------|
+| **JWT 인증** | ✅ 완료 | Access Token (5분), Refresh Token (24시간) |
+| **Rate Limiting** | ✅ 완료 | 브루트포스 공격 방지 (IP 기반) |
+| **HTTPS 강제** | ✅ 완료 | 프로덕션 환경에서 HTTP → HTTPS 리다이렉션 |
+| **보안 헤더** | ✅ 완료 | HSTS, CSP, X-Frame-Options 등 |
+| **OAuth2** | ✅ 완료 | Authorization Server + Resource Server |
+
+### Rate Limiting 정책
+
+```bash
+# OAuth2 토큰 엔드포인트: 10회/분
+# 로그인 엔드포인트: 5회/분
+# 회원가입 엔드포인트: 3회/시간
+```
+
+### 보안 헤더
+
+```http
+# 프로덕션 환경에서 자동 추가되는 헤더들
+Strict-Transport-Security: max-age=31536000
+Content-Security-Policy: default-src 'self'; script-src 'self'...
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+```
+
+### 환경별 보안 설정
+
+```yaml
+# 개발 환경 (dev)
+- HTTPS: 비활성화
+- 로그 레벨: DEBUG
+- Rate Limiting: 완화
+
+# 프로덕션 환경 (prod)
+- HTTPS: 강제 활성화
+- 로그 레벨: INFO
+- Rate Limiting: 엄격
+```
+
+**📚 상세 문서**: [보안 개선사항 가이드](docs/SECURITY-IMPROVEMENTS.md)
+
+---
+
+## �📊 데이터베이스
 
 ### 스키마 구조
 

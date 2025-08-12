@@ -1,23 +1,54 @@
+# 프로덕션 환경 설정
 spring:
   datasource:
-    url: jdbc:postgresql://db:5432/wordle
-    username: wordle
-    password: pwd
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/wordle}
+    username: ${SPRING_DATASOURCE_USERNAME:wordle}
+    password: ${SPRING_DATASOURCE_PASSWORD:pwd}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate  # 프로덕션에서는 validate 사용
     open-in-view: false
+    show-sql: false       # 프로덕션에서는 SQL 로그 비활성화
+  
+  # 보안 설정
   security:
     oauth2:
       authorizationserver:
-        key-store: classpath:keys/keystore.p12
-        key-store-password: changeit
-        key-alias: oauth-key
+        jwt:
+          keystore:
+            # 프로덕션에서는 외부 키스토어 사용 권장
+            location: ${JWT_KEYSTORE_LOCATION:classpath:keystore.p12}
+            password: ${JWT_KEYSTORE_PASSWORD:changeit}
+            alias: ${JWT_KEYSTORE_ALIAS:wordle-jwt}
+
+# 서버 설정
+server:
+  port: ${SERVER_PORT:8080}
+  # HTTPS 설정 (리버스 프록시 사용 시 주석 처리)
+  ssl:
+    enabled: false  # Nginx/ALB에서 SSL 종료 시 false
 
 management:
   endpoints:
     web:
       base-path: /actuator
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# 로깅 설정 (프로덕션)
+logging:
+  level:
+    root: INFO
+    com.example.wordle: INFO
+    org.springframework.security: WARN
+    com.example.wordle.security.filter.RateLimitingFilter: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  file:
+    name: /app/logs/wordle-backend.log
       exposure:
         include: health, info
   endpoint:

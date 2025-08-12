@@ -92,8 +92,8 @@ class AuthorizationServerConfig {
                     .requireProofKey(true)
                     .build())
                 .tokenSettings(TokenSettings.builder()
-                    .accessTokenTimeToLive(Duration.ofMinutes(15))
-                    .refreshTokenTimeToLive(Duration.ofDays(7))
+                    .accessTokenTimeToLive(Duration.ofMinutes(5))  // 15분 → 5분으로 단축
+                    .refreshTokenTimeToLive(Duration.ofHours(24))  // 7일 → 24시간으로 단축
                     .reuseRefreshTokens(false)
                     .build())
                 .build()

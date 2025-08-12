@@ -1,34 +1,42 @@
+# 개발 환경 설정
 spring:
   datasource:
-    url: jdbc:postgresql://db:5432/wordle
-    username: wordle
-    password: wordle
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/wordle}
+    username: ${SPRING_DATASOURCE_USERNAME:wordle}
+    password: ${SPRING_DATASOURCE_PASSWORD:wordle}
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+    show-sql: true    # 개발환경에서는 SQL 로그 활성화
     properties:
       hibernate:
         format_sql: true
+  
+  # 보안 설정 (개발용)
   security:
     oauth2:
       authorizationserver:
-        key-store: classpath:keys/keystore.p12
-        key-store-password: changeit
-        key-alias: oauth-key
+        jwt:
+          keystore:
+            location: ${JWT_KEYSTORE_LOCATION:classpath:keystore.p12}
+            password: ${JWT_KEYSTORE_PASSWORD:changeit}
+            alias: ${JWT_KEYSTORE_ALIAS:wordle-jwt}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, beans
+        include: health, info, beans, metrics
   endpoint:
     health:
       show-details: always
 
+# 로깅 설정 (개발)
 logging:
   level:
-    org.springframework.security: DEBUG
+    root: INFO
     com.example.wordle: DEBUG
+    org.springframework.security: DEBUG
+    com.example.wordle.security.filter.RateLimitingFilter: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE

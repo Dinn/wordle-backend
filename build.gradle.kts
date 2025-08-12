@@ -33,6 +33,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.security:spring-security-oauth2-jose")
+    
+    /* ─ Rate Limiting & Security ─ */
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("com.github.ben-manes.caffeine:caffeine")
 
     /* ─ 테스트 ─ */
     testImplementation("org.springframework.boot:spring-boot-starter-test") {

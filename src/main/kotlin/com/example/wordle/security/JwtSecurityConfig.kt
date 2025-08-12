@@ -1,6 +1,7 @@
 package com.example.wordle.security
 
 import com.example.wordle.auth.repository.UserRepository
+import com.example.wordle.security.filter.RateLimitingFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
@@ -14,10 +15,13 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
 @EnableWebSecurity
-class JwtSecurityConfig {
+class JwtSecurityConfig(
+    private val rateLimitingFilter: RateLimitingFilter
+) {
 
     @Bean
     @Order(2)
@@ -54,6 +58,8 @@ class JwtSecurityConfig {
             .formLogin { form ->
                 form.loginPage("/login")
             }
+            // Rate Limiting 필터 추가
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter::class.java)
             .build()
     }
 

@@ -7,9 +7,25 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+  
+  # 캐시 설정 (Caffeine으로 변경)
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
+
+  # 프로파일별 설정
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
 management:
   endpoints:
     web:
       exposure:
         include: health, info
+
+# 로깅 설정
+logging:
+  level:
+    com.example.wordle.security: DEBUG
+    org.springframework.security: INFO

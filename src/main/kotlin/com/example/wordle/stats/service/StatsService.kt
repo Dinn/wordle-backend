@@ -1,37 +1,35 @@
 package com.example.wordle.stats.service
 
+import com.example.wordle.stats.domain.PlayerStats
+import com.example.wordle.stats.repository.StatsRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 @Service
-class StatsService {
+class StatsService(
+    private val repo: StatsRepository
+) {
     
-    fun getStats(userId: UUID): Map<String, Any> {
-        // 임시 구현 - 실제 DB 조회 로직 추가 필요
-        return mapOf(
-            "gamesPlayed" to 0,
-            "gamesWon" to 0,
-            "currentStreak" to 0,
-            "maxStreak" to 0,
-            "guessDistribution" to mapOf(
-                1 to 0,
-                2 to 0,
-                3 to 0,
-                4 to 0,
-                5 to 0,
-                6 to 0
-            )
-        )
-    }
-    
+    /**
+     * 게임 결과 기록
+     */
+    @Transactional
     fun recordGame(userId: UUID, guessCnt: Int, win: Boolean) {
-        // 임시 구현 - 실제 게임 결과 저장 로직 추가 필요
-        println("Recording game for user $userId: guesses=$guessCnt, win=$win")
+        // 1) 기존 통계 조회 또는 새로 생성
+        val stats = repo.findById(userId).orElse(PlayerStats(userId))
         
-        // 여기에 실제 DB 저장 로직이 들어갈 예정
-        // 예: gameStatsRepository.save(GameStats(userId, guessCnt, win))
-    }
-}
+        // 2) 게임 수 증가
+        stats.games++
+        
+        if (win) {
+            // 승리 시
+            stats.wins++
+            stats.curStreak++
+            if (stats.curStreak > stats.maxStreak) {
+                stats.maxStreak = stats.curStreak
+            }
+            
             // 3) GuessDist 값 객체는 copy 로 불변성 유지
             stats.dist = when (guessCnt) {
                 1 -> stats.dist.copy(one   = stats.dist.one   + 1)
@@ -46,7 +44,7 @@ class StatsService {
             stats.curStreak = 0
         }
 
-        repo.save(stats)          // INSERT -or- UPDATE
+        repo.save(stats)
     }
 
     /**

@@ -10,7 +10,8 @@ plugins {
 
     id("com.google.cloud.tools.jib") version "3.4.0"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
-    id("io.gitlab.arturbosch.detekt")  version "1.23.6"
+    // detekt 임시 제거 - Kotlin 2.0 호환성 문제
+    // id("io.gitlab.arturbosch.detekt") version "1.24.0"
 }
 
 java.sourceCompatibility = JavaVersion.VERSION_21
@@ -18,7 +19,7 @@ repositories { mavenCentral() }
 
 dependencies {
     /* ─ 앱 ─ */
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -69,5 +70,5 @@ jib {
 }
 
 tasks.named("check") {
-    dependsOn("ktlintCheck", "detekt")
+    dependsOn("ktlintCheck")
 }

@@ -1,5 +1,7 @@
 package com.example.wordle.stats.dto
 
+import com.example.wordle.stats.domain.PlayerStats
+
 data class PlayerStatsResponse(
     val gamesPlayed: Int = 0,
     val gamesWon: Int = 0,
@@ -15,18 +17,21 @@ data class PlayerStatsResponse(
     )
 ) {
     companion object {
-        fun from(stats: Any): PlayerStatsResponse {
-            return when (stats) {
-                is Map<*, *> -> PlayerStatsResponse(
-                    gamesPlayed = stats["gamesPlayed"] as? Int ?: 0,
-                    gamesWon = stats["gamesWon"] as? Int ?: 0,
-                    currentStreak = stats["currentStreak"] as? Int ?: 0,
-                    maxStreak = stats["maxStreak"] as? Int ?: 0
+        fun from(stats: PlayerStats): PlayerStatsResponse {
+            return PlayerStatsResponse(
+                gamesPlayed = stats.games,
+                gamesWon = stats.wins,
+                currentStreak = stats.curStreak,
+                maxStreak = stats.maxStreak,
+                guessDistribution = mapOf(
+                    1 to stats.dist.one,
+                    2 to stats.dist.two,
+                    3 to stats.dist.three,
+                    4 to stats.dist.four,
+                    5 to stats.dist.five,
+                    6 to stats.dist.six
                 )
-                else -> PlayerStatsResponse()
-            }
+            )
         }
-    }
-}
     }
 }

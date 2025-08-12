@@ -21,4 +21,3 @@ data class GameResultRequest(
     @field:NotNull(message = "승패 결과는 필수입니다")
     val win: Boolean?
 )
-)

@@ -1,5 +1,3 @@
-version: "3.9"
-
 ##########################
 # 네트워크 (자동 생성 가능)
 ##########################
@@ -44,29 +42,31 @@ services:
       context: .                 # 루트에 있는 Dockerfile 사용
       dockerfile: Dockerfile
     restart: unless-stopped
-    user: "${UID:-1000}:${GID:-1000}"
     environment:
       SPRING_PROFILES_ACTIVE: dev
       TZ: Asia/Seoul
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/wordle
       SPRING_DATASOURCE_USERNAME: wordle
       SPRING_DATASOURCE_PASSWORD: wordle
-      GRADLE_USER_HOME: /workspace/.gradle
+      GRADLE_USER_HOME: /home/gradle/.gradle
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      # 코드 동기화 (Dev Container·핫리로드)
+      # 코드 동기화 (핫 리로드)
       - ./:/workspace
-      # Gradle 캐시 공유로 빌드 속도↑
+      # Gradle 캐시 공유로 빌드 속도 향상
       - gradle_cache:/home/gradle/.gradle
+      # entrypoint 스크립트 마운트
+      - ./docker/entrypoint.sh:/app/entrypoint.sh:ro
     healthcheck:                 # Actuator 사용 (8080/actuator/health)
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
       - wordle-net
     ports:
       - "8080:8080"
-    entrypoint: ["sh", "-c", "sh /workspace/docker/entrypoint.sh"]
+    entrypoint: ["sh", "/app/entrypoint.sh"]

@@ -175,17 +175,19 @@ docker compose exec backend bash -c 'cd /workspace && ./gradlew test'
 ### 카테고리별 테스트
 
 ```bash
-# 단위 테스트만
+# 단위 테스트만 (현재 사용 가능)
 ./gradlew test --tests "*Test"
 
-# 통합 테스트만
-./gradlew test --tests "*IT"
+# 특정 패키지 테스트
+./gradlew test --tests "com.example.wordle.stats.*"
+./gradlew test --tests "com.example.wordle.auth.*"
 
 # 특정 클래스 테스트
+./gradlew test --tests "StatsControllerTest"
 ./gradlew test --tests "AuthControllerTest"
 
 # 특정 메소드 테스트
-./gradlew test --tests "AuthControllerTest.POST signup with valid data returns 201"
+./gradlew test --tests "StatsControllerTest.GET stats returns user statistics"
 ```
 
 ### 테스트 커버리지

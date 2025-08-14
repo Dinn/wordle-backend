@@ -92,8 +92,8 @@ class AuthorizationServerConfig {
                     .requireProofKey(true)
                     .build())
                 .tokenSettings(TokenSettings.builder()
-                    .accessTokenTimeToLive(Duration.ofMinutes(5))  // 15분 → 5분으로 단축
-                    .refreshTokenTimeToLive(Duration.ofHours(24))  // 7일 → 24시간으로 단축
+                    .accessTokenTimeToLive(Duration.ofMinutes(5))  
+                    .refreshTokenTimeToLive(Duration.ofHours(24))  
                     .reuseRefreshTokens(false)
                     .build())
                 .build()
@@ -103,7 +103,7 @@ class AuthorizationServerConfig {
         return repository
     }
 
-    /** JKS 키스토어에서 RSA 키 로드 */
+    /** PKCS12 키스토어에서 RSA 키 로드 */
     @Bean
     fun jwkSource(): JWKSource<SecurityContext> {
         val keyStore = KeyStore.getInstance("PKCS12")

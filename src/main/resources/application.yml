@@ -5,8 +5,13 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate  # OAuth2 테이블은 Flyway로 관리
     open-in-view: false
+    properties:
+      hibernate:
+        # OAuth2 테이블은 JPA 관리 대상에서 제외
+        hbm2ddl:
+          auto: validate
   
   # 캐시 설정 (Caffeine으로 변경)
   cache:

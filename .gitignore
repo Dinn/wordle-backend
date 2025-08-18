@@ -63,3 +63,18 @@ Thumbs.db
 
 # Test keystore (필요시 제외)
 # /src/test/resources/test-keystore.p12
+
+# 환경변수 파일 (AWS 정보 보안)
+.env
+.env.dev
+.env.prod
+.env.local
+.env.*.local
+
+# AWS 설정 파일
+aws-config.properties
+application-local.yml
+
+# 데이터베이스 백업 파일
+*.sql
+*.dump

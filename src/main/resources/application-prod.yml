@@ -1,30 +1,82 @@
+# 프로덕션 환경 설정 (AWS RDS 연결)
 spring:
   datasource:
-    url: jdbc:postgresql://db:5432/wordle
-    username: wordle
-    password: pwd
+    # AWS RDS 프로덕션 서버 연결 설정
+    url: ${AWS_PROD_DB_URL:jdbc:postgresql://your-prod-rds-endpoint.region.rds.amazonaws.com:5432/wordle_prod}
+    username: ${AWS_PROD_DB_USERNAME:wordle_prod_user}
+    password: ${AWS_PROD_DB_PASSWORD:your_secure_prod_password_here}
+    
+    # 프로덕션 환경 커넥션 풀 설정 (높은 성능)
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
+      # 프로덕션 최적화
+      cache-prep-stmts: true
+      prep-stmt-cache-size: 250
+      prep-stmt-cache-sql-limit: 2048
+      use-server-prep-stmts: true
+      
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    open-in-view: false
+      ddl-auto: validate  # 프로덕션에서는 validate 사용 (안전성)
+    open-in-view: false   # 성능을 위해 비활성화
+    show-sql: false       # 프로덕션에서는 SQL 로그 비활성화
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # 프로덕션 최적화
+        connection:
+          provider_disables_autocommit: true
+        jdbc:
+          batch_size: 50
+          fetch_size: 100
+          order_inserts: true
+          order_updates: true
+          
+  # 프로덕션 보안 설정
   security:
     oauth2:
       authorizationserver:
-        key-store: classpath:keys/keystore.p12
-        key-store-password: changeit
-        key-alias: oauth-key
+        jwt:
+          keystore:
+            location: ${JWT_KEYSTORE_LOCATION:classpath:keystore.p12}
+            password: ${JWT_KEYSTORE_PASSWORD:changeit}
+            alias: ${JWT_KEYSTORE_ALIAS:wordle-jwt}
 
+# 프로덕션 환경 모니터링 설정 (보안 강화)
 management:
   endpoints:
     web:
       base-path: /actuator
       exposure:
-        include: health, info
+        include: health, info, metrics  # 최소한의 엔드포인트만 노출
   endpoint:
     health:
-      show-details: never
-
+      show-details: never  # 프로덕션에서는 상세 정보 숨김
+  metrics:
+    export:
+      # CloudWatch 연동을 위한 설정 (필요시)
+      enabled: true
+      
+# 프로덕션 환경 로깅 (최소한의 로그)
 logging:
   level:
-    org.springframework.security: INFO
+    org.springframework.security: WARN
     com.example.wordle: INFO
+    org.hibernate: WARN
+    org.springframework.web: WARN
+    # AWS RDS 연결 관련
+    com.zaxxer.hikari: WARN
+  # 로그 파일 설정 (프로덕션 환경)
+  file:
+    name: /var/log/wordle/application.log
+    max-size: 10MB
+    max-history: 30
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

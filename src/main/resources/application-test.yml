@@ -1,15 +1,15 @@
-# 개발 환경 설정 (AWS RDS 연결)
+# 테스트 환경 설정 (AWS RDS 연결 - DEV와 같은 서버, 다른 DB명)
 spring:
   datasource:
-    # AWS RDS 개발 서버 연결 설정
-    url: ${AWS_DEV_DB_URL:jdbc:postgresql://your-dev-rds-endpoint.region.rds.amazonaws.com:5432/wordle_dev}
-    username: ${AWS_DEV_DB_USERNAME:postgres}
-    password: ${AWS_DEV_DB_PASSWORD:your_dev_password_here}
+    # AWS RDS 테스트 환경 (DEV와 같은 서버)
+    url: ${AWS_TEST_DB_URL:jdbc:postgresql://your-dev-rds-endpoint.region.rds.amazonaws.com:5432/wordle_test}
+    username: ${AWS_TEST_DB_USERNAME:postgres}
+    password: ${AWS_TEST_DB_PASSWORD:your_test_password_here}
     
-    # 커넥션 풀 설정 (AWS RDS 최적화)
+    # 커넥션 풀 설정 (테스트용 - 적은 커넥션)
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
+      maximum-pool-size: 5
+      minimum-idle: 1
       idle-timeout: 300000
       max-lifetime: 1200000
       connection-timeout: 20000
@@ -18,21 +18,21 @@ spring:
       
   jpa:
     hibernate:
-      ddl-auto: update  # 개발환경에서는 update 사용
-    show-sql: true      # 개발환경에서는 SQL 로그 활성화
+      ddl-auto: create-drop  # 테스트시마다 스키마 재생성
+    show-sql: true           # 테스트에서는 SQL 로그 활성화
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        # AWS RDS 연결 최적화
+        # 테스트 최적화
         connection:
           provider_disables_autocommit: true
         jdbc:
-          batch_size: 25
+          batch_size: 10
           order_inserts: true
           order_updates: true
           
-  # 보안 설정 (개발용)
+  # 테스트용 보안 설정
   security:
     oauth2:
       authorizationserver:
@@ -42,16 +42,17 @@ spring:
             password: ${JWT_KEYSTORE_PASSWORD:changeit}
             alias: ${JWT_KEYSTORE_ALIAS:wordle-jwt}
 
+# 테스트 환경 모니터링 설정
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, beans, metrics, env
+        include: health, info, beans, metrics
   endpoint:
     health:
       show-details: always
       
-# 개발환경 전용 로깅 (상세한 디버깅 정보)
+# 테스트 환경 로깅 (상세한 디버깅)
 logging:
   level:
     org.springframework.security: DEBUG
@@ -61,3 +62,5 @@ logging:
     # AWS RDS 연결 로깅
     com.zaxxer.hikari: DEBUG
     org.springframework.jdbc: DEBUG
+    # 테스트 관련 로깅
+    org.springframework.test: DEBUG

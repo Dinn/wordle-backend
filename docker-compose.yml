@@ -1,25 +1,77 @@
 version: "3.9"
+
+##########################
+# 네트워크 (자동 생성 가능)
+##########################
+networks:
+  wordle-net:
+
+##########################
+# 볼륨 (DB 데이터 영속)
+##########################
+volumes:
+  postgres_data:          # DB 실제 데이터
+  gradle_cache:           # Gradle ~/.gradle 캐시
+
+##########################
+# 서비스 정의
+##########################
 services:
+  # ---------- ① PostgreSQL ----------
   db:
-    image: postgres:16
+    image: postgres:16           # 공식 이미지 (PostgreSQL License, 무료)
+    restart: unless-stopped
     environment:
       POSTGRES_DB: wordle
       POSTGRES_USER: wordle
       POSTGRES_PASSWORD: wordle
+      TZ: Asia/Seoul
+      OPEN_DICT_KEY: ${OPEN_DICT_KEY}
     volumes:
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports: ["5432:5432"]
+      # 디렉터리 전체를 init 폴더로 마운트
+      - ./docker/postgres/:/docker-entrypoint-initdb.d/:ro
+      # 데이터 영속 볼륨
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:                 # pg_isready 로 헬스 확인
+      test: ["CMD-SHELL", "pg_isready -U wordle -d wordle"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wordle-net
+    ports:
+      - "5432:5432"
 
-  redis:
-    image: redis:7
-    ports: ["6379:6379"]
-
+  # ---------- ② Spring Backend ----------
   backend:
-    build: .
+    build:
+      context: .                 # 루트에 있는 Dockerfile 사용
+      dockerfile: Dockerfile
+      # 필요 시 빌드 목표 아키텍처 지정 (CI에서 유용)
+      # platforms:
+      #   - linux/amd64
+      #   - linux/arm64
+    restart: unless-stopped
     environment:
+      SPRING_PROFILES_ACTIVE: dev
+      TZ: Asia/Seoul
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/wordle
       SPRING_DATASOURCE_USERNAME: wordle
       SPRING_DATASOURCE_PASSWORD: wordle
-      SPRING_REDIS_HOST: redis
-    ports: ["8080:8080"]
-    depends_on: [db, redis]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # 코드 동기화 (Dev Container·핫리로드)
+      - ./:/workspace
+      # Gradle 캐시 공유로 빌드 속도↑
+      - gradle_cache:/home/gradle/.gradle
+    healthcheck:                 # Actuator 사용 (8080/actuator/health)
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wordle-net
+    ports:
+      - "8080:8080"

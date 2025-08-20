@@ -26,7 +26,6 @@ services:
       POSTGRES_USER: wordle
       POSTGRES_PASSWORD: wordle
       TZ: Asia/Seoul
-      OPEN_DICT_KEY: ${OPEN_DICT_KEY}
     volumes:
       # 디렉터리 전체를 init 폴더로 마운트
       - ./docker/postgres/:/docker-entrypoint-initdb.d/:ro
@@ -58,6 +57,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/wordle
       SPRING_DATASOURCE_USERNAME: wordle
       SPRING_DATASOURCE_PASSWORD: wordle
+      OPEN_DICT_KEY: ${OPEN_DICT_KEY}
     depends_on:
       db:
         condition: service_healthy

@@ -6,7 +6,7 @@ import com.example.wordle.dto.ViewResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.util.UriComponentsBuilder
 import reactor.core.publisher.Mono
 import java.nio.charset.StandardCharsets
@@ -18,26 +18,50 @@ class SearchService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun fetchMeanings(q: String, onlyGeneral: Boolean = true): Mono<MeaningResult> {
-        val uri = UriComponentsBuilder.fromHttpUrl(props.search.baseUrl)
-            .queryParam("certkey_no", props.search.certkeyNo)
-            .queryParam("key", props.search.key)
-            .queryParam("target_type", props.search.targetType)
-            .queryParam("req_type", props.search.reqType) // json
-            .queryParam("part", props.search.part)
-            .queryParam("q", q.trim())
-            .queryParam("sort", props.search.sort)
-            .queryParam("start", props.search.start)
-            .queryParam("num", props.search.num)
-            .queryParam("advanced", props.search.advanced)
-            .queryParam("method", props.search.method)
-            .build()
-            .encode(StandardCharsets.UTF_8)
-            .toUri()
+    /** ---------- Public APIs ---------- */
 
+    fun fetchMeanings(q: String, onlyGeneral: Boolean = true): Mono<MeaningResult> {
+        // 1) 동기 단계(URI 구성) 예외: try-catch
+        val uri = try {
+            UriComponentsBuilder.fromHttpUrl(props.search.baseUrl)
+                .queryParam("certkey_no", props.search.certkeyNo)
+                .queryParam("key", props.search.key)
+                .queryParam("target_type", props.search.targetType)
+                .queryParam("req_type", props.search.reqType) // json
+                .queryParam("part", props.search.part)
+                .queryParam("q", q.trim())
+                .queryParam("sort", props.search.sort)
+                .queryParam("start", props.search.start)
+                .queryParam("num", props.search.num)
+                .queryParam("advanced", props.search.advanced)
+                .queryParam("method", props.search.method)
+                .build()
+                .encode(StandardCharsets.UTF_8)
+                .toUri()
+        } catch (e: Exception) {
+            log.error("OpenDict search URI build failed: ${e.message}", e)
+            return Mono.just(fallbackMeaningResult(q))
+        }
+
+        // 2) 비동기 단계(WebClient) 예외: onStatus + onErrorResume
         return webClient.get()
             .uri(uri)
             .retrieve()
+            .onStatus({ it.is4xxClientError || it.is5xxServerError }) { resp ->
+                resp.bodyToMono(String::class.java)
+                    .defaultIfEmpty("")
+                    .flatMap { body ->
+                        val msg = "OpenDict search HTTP ${resp.statusCode()} body=$body"
+                        log.error(msg)
+                        Mono.error(WebClientResponseException.create(
+                            resp.statusCode().value(),
+                            "Search API error",
+                            null,
+                            body.toByteArray(),
+                            StandardCharsets.UTF_8
+                        ))
+                    }
+            }
             .bodyToMono(SearchResponse::class.java)
             .defaultIfEmpty(SearchResponse())
             .map { resp ->
@@ -58,7 +82,10 @@ class SearchService(
                 val start = ch?.start?.toIntOrNull() ?: props.search.start
                 val num   = ch?.num?.toIntOrNull() ?: props.search.num
 
-                log.debug("OpenDict search q='{}' total={} defs(all)={} -> defs(first)={}", q, total, defs.size, oneDefList.size)
+                log.debug(
+                    "OpenDict search q='{}' total={} defs(all)={} -> defs(first)={}",
+                    q, total, defs.size, oneDefList.size
+                )
 
                 MeaningResult(
                     query = q,
@@ -69,23 +96,49 @@ class SearchService(
                     definitions = oneDefList
                 )
             }
+            .onErrorResume { ex ->
+                log.error("OpenDict search failed for q='{}': {}", q, ex.message, ex)
+                Mono.just(fallbackMeaningResult(q))
+            }
     }
 
     fun fetchWordInfoByWordAndSense(qWordPlusSense: String): Mono<ViewResult> {
-        val uri = UriComponentsBuilder.fromHttpUrl(props.view.baseUrl)
-            .queryParam("certkey_no", props.search.certkeyNo)
-            .queryParam("key", props.search.key)
-            .queryParam("target_type", props.view.targetType) // view
-            .queryParam("req_type", props.view.reqType)       // json
-            .queryParam("method", props.view.method)          // word_info
-            .queryParam("q", qWordPlusSense.trim())
-            .build()
-            .encode(StandardCharsets.UTF_8)
-            .toUri()
+        // 1) 동기 단계(URI 구성) 예외: try-catch
+        val uri = try {
+            UriComponentsBuilder.fromHttpUrl(props.view.baseUrl)
+                .queryParam("certkey_no", props.search.certkeyNo)
+                .queryParam("key", props.search.key)
+                .queryParam("target_type", props.view.targetType) // view
+                .queryParam("req_type", props.view.reqType)       // json
+                .queryParam("method", props.view.method)          // word_info
+                .queryParam("q", qWordPlusSense.trim())
+                .build()
+                .encode(StandardCharsets.UTF_8)
+                .toUri()
+        } catch (e: Exception) {
+            log.error("OpenDict view URI build failed: ${e.message}", e)
+            return Mono.just(fallbackViewResult(qWordPlusSense))
+        }
 
+        // 2) 비동기 단계(WebClient) 예외: onStatus + onErrorResume
         return webClient.get()
             .uri(uri)
             .retrieve()
+            .onStatus({ it.is4xxClientError || it.is5xxServerError }) { resp ->
+                resp.bodyToMono(String::class.java)
+                    .defaultIfEmpty("")
+                    .flatMap { body ->
+                        val msg = "OpenDict view HTTP ${resp.statusCode()} body=$body"
+                        log.error(msg)
+                        Mono.error(WebClientResponseException.create(
+                            resp.statusCode().value(),
+                            "View API error",
+                            null,
+                            body.toByteArray(),
+                            StandardCharsets.UTF_8
+                        ))
+                    }
+            }
             .bodyToMono(ViewResponse::class.java)
             .defaultIfEmpty(ViewResponse())
             .map { resp ->
@@ -100,7 +153,29 @@ class SearchService(
                     definition = def
                 )
             }
+            .onErrorResume { ex ->
+                log.error("OpenDict view failed for q='{}': {}", qWordPlusSense, ex.message, ex)
+                Mono.just(fallbackViewResult(qWordPlusSense))
+            }
     }
+
+    /** ---------- Fallback Builders ---------- */
+
+    private fun fallbackMeaningResult(q: String) = MeaningResult(
+        query = q,
+        total = 0,
+        start = props.search.start,
+        num = props.search.num,
+        count = 0,
+        definitions = emptyList()
+    )
+
+    private fun fallbackViewResult(q: String) = ViewResult(
+        query = q,
+        targetCode = null,
+        word = null,
+        definition = ""
+    )
 }
 
 /** 반환 모델 (동일) */

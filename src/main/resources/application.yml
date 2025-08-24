@@ -13,3 +13,23 @@ management:
     web:
       exposure:
         include: health, info
+app:
+  opendict:
+    search:
+      base-url: https://opendict.korean.go.kr/api/search
+      certkey-no: 7818
+      key: ${OPEN_DICT_KEY}       # ← 환경변수에서 주입
+      target-type: search
+      req-type: json              # JSON 권장
+      part: word
+      sort: dict
+      start: 1
+      num: 10
+      advanced: y
+      method: exact               # exact|start|include (원하면 변경)
+
+    view:
+      base-url: https://opendict.korean.go.kr/api/view
+      target-type: view
+      req-type: json
+      method: word_info

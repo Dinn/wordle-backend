@@ -1,19 +1,32 @@
 {
-  "name": "wordle-backend-dev",
-  "dockerComposeFile": "../docker-compose.yml",
+  "name": "Wordle Backend Dev",
+
+  // compose 파일을 배열로 지정 (버전 호환 ↑)
+  "dockerComposeFile": [
+    "../docker-compose.yml"
+  ],
+
+  // dev-container로 사용할 서비스
   "service": "backend",
+
+  // compose에서 마운트한 경로와 동일하게
   "workspaceFolder": "/workspace",
+
+  // 컨테이너 최초 생성 후 한 번 실행
+  "postCreateCommand": "./gradlew build --quiet",
+
+  // ↙︎ 확장 자동 설치 (원하면 수정)
   "customizations": {
     "vscode": {
-      "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash"
-      },
       "extensions": [
-        "vscjava.vscode-spring-boot-dev-pack",
-        "mathiasfrohlich.kotlin",
+        "vscjava.vscode-gradle",
         "ms-azuretools.vscode-docker"
       ]
     }
-  },
-  "postCreateCommand": "./gradlew test"
+  }
+
+  
+  ,"runServices": ["db","backend"],      // devcontainer 실행 시 필요한 서비스만
+  "overrideCommand": false               // backend Dockerfile CMD 그대로 사용
+  
 }

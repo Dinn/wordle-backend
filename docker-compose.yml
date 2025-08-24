@@ -27,9 +27,11 @@ services:
       POSTGRES_PASSWORD: wordle
       TZ: Asia/Seoul
     volumes:
+      # 디렉터리 전체를 init 폴더로 마운트
       - ./docker/postgres/:/docker-entrypoint-initdb.d/:ro
+      # 데이터 영속 볼륨
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
+    healthcheck:                 # pg_isready 로 헬스 확인
       test: ["CMD-SHELL", "pg_isready -U wordle -d wordle"]
       interval: 10s
       timeout: 5s
@@ -50,8 +52,12 @@ services:
   # ---------- ③ Spring Backend ----------
   backend:
     build:
-      context: .
+      context: .                 # 루트에 있는 Dockerfile 사용
       dockerfile: Dockerfile
+      # 필요 시 빌드 목표 아키텍처 지정 (CI에서 유용)
+      # platforms:
+      #   - linux/amd64
+      #   - linux/arm64
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: dev
@@ -67,9 +73,11 @@ services:
       redis:
         condition: service_started
     volumes:
+      # 코드 동기화 (Dev Container·핫리로드)
       - ./:/workspace
+      # Gradle 캐시 공유로 빌드 속도↑
       - gradle_cache:/home/gradle/.gradle
-    healthcheck:
+    healthcheck:                 # Actuator 사용 (8080/actuator/health)
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s

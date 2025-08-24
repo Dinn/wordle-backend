@@ -2,7 +2,7 @@
 
 Spring Boot 3.3 + Kotlin으로 구축된 OAuth2 인증 서버를 포함한 Wordle 게임 백엔드 API입니다.
 
-> **최근 업데이트**: WebFlux에서 Spring MVC 아키텍처로 마이그레이션하여 OAuth2 Authorization Server와의 호환성을 개선했습니다. (2025.08.12)
+> **최근 업데이트**: AWS RDS 연결 지원 및 환경별 설정 분리 구현 (2025.08.24)
 
 ## 🛠️ 기술 스택
 
@@ -11,11 +11,12 @@ Spring Boot 3.3 + Kotlin으로 구축된 OAuth2 인증 서버를 포함한 Wordl
 | **언어** | Kotlin | 2.0.0 |
 | **프레임워크** | Spring Boot MVC | 3.3.0 |
 | **인증** | OAuth2 Authorization Server | 1.3.0 |
-| **데이터베이스** | PostgreSQL | 16 |
+| **데이터베이스** | PostgreSQL / AWS RDS | 16 |
 | **ORM** | Spring Data JPA | 3.3.0 |
 | **빌드 도구** | Gradle | 8.5 |
 | **컨테이너** | Docker + Compose | Latest |
 | **테스트** | JUnit 5 + MockMvc | 5.10.2 |
+| **클라우드** | AWS RDS | PostgreSQL 16 |
 
 ---
 
@@ -26,27 +27,54 @@ Spring Boot 3.3 + Kotlin으로 구축된 OAuth2 인증 서버를 포함한 Wordl
 - **Git CLI**
 - **Java 21+** (선택사항 - 로컬 개발 시)
 
-### 2. 설치 및 실행
+### 2. 환경별 설정
 
+이 프로젝트는 **개발/테스트/프로덕션** 환경별로 분리된 설정을 지원합니다:
+
+```bash
+# 환경별 데이터베이스 구성
+├── 개발 환경 (dev)    → AWS RDS 개발 서버
+├── 테스트 환경 (test)  → AWS RDS 개발 서버 (다른 DB)
+└── 프로덕션 환경 (prod) → AWS RDS 프로덕션 서버
+```
+
+### 3. 설치 및 실행
+
+#### 🔹 로컬 DB와 함께 개발 (권장)
 ```bash
 # 1) 저장소 클론
 git clone <repository-url>
 cd wordle-backend
 
-# 2) 환경 변수 확인 (선택사항)
-cp .env.example .env  # 환경별 설정 오버라이드
-
-# 3) 전체 스택 실행
+# 2) 로컬 PostgreSQL + 백엔드 실행
 docker compose up --build
 
-# 4) 헬스체크 확인
+# 3) 헬스체크 확인
 curl http://localhost:8080/actuator/health
-# 응답: {"status":"UP"}
 ```
 
-### 3. 서비스 접근
+#### 🔹 AWS RDS 연결 개발
+```bash
+# 1) 환경변수 설정
+cp .env.dev.template .env.dev
+# AWS RDS 정보 입력 (.env.dev 파일 수정)
+
+# 2) AWS 연결용 Docker Compose 실행
+docker compose -f docker-compose.aws.yml --env-file .env.dev up --build
+
+# 3) 연결 확인
+curl http://localhost:8080/actuator/health/db
+```
+
+### 4. 서비스 접근
 
 | 서비스 | URL | 용도 |
+|--------|-----|------|
+| **Backend API** | http://localhost:8080 | REST API |
+| **PostgreSQL** | localhost:5432 | 로컬 데이터베이스 |
+| **AWS RDS** | [RDS 엔드포인트] | 클라우드 데이터베이스 |
+| **Actuator** | http://localhost:8080/actuator | 모니터링 |
+| **OAuth2 JWKS** | http://localhost:8080/oauth2/jwks | JWT 공개키 |
 |--------|-----|------|
 | **Backend API** | http://localhost:8080 | REST API |
 | **PostgreSQL** | localhost:5432 | 데이터베이스 |
@@ -56,6 +84,41 @@ curl http://localhost:8080/actuator/health
 ---
 
 ## 🔧 개발 환경
+
+### 환경별 설정
+
+#### 🌍 개발 환경 (Development)
+```bash
+# Docker Compose 사용
+docker compose -f docker-compose.aws.yml --env-file .env.dev up
+
+# 직접 실행
+export SPRING_PROFILES_ACTIVE=dev
+source .env.dev
+./gradlew bootRun
+```
+
+#### 🧪 테스트 환경 (Test)
+```bash
+# Docker Compose 사용
+docker compose -f docker-compose.aws.yml --env-file .env.test up
+
+# 직접 실행
+export SPRING_PROFILES_ACTIVE=test
+source .env.test
+./gradlew bootRun
+```
+
+#### 🚀 프로덕션 환경 (Production)
+```bash
+# Docker Compose 사용
+docker compose -f docker-compose.aws.yml --env-file .env.prod up
+
+# 직접 실행
+export SPRING_PROFILES_ACTIVE=prod
+source .env.prod
+./gradlew bootRun
+```
 
 ### 로컬 개발 (Hot Reload)
 
@@ -146,6 +209,79 @@ data class PlayerStats(...)
 // 4. Repository Layer
 @Repository
 interface PlayerStatsRepository : JpaRepository<PlayerStats, String>
+```
+
+---
+
+## ☁️ AWS 클라우드 연결
+
+### AWS RDS 설정
+
+이 프로젝트는 PostgreSQL 데이터베이스로 **로컬 Docker** 또는 **AWS RDS**를 사용할 수 있습니다.
+
+#### 환경별 데이터베이스 구성
+
+| 환경 | 서버 | 데이터베이스 | 용도 |
+|------|------|-------------|------|
+| **개발 (dev)** | AWS RDS 개발 서버 | `wordle_dev` | 로컬 개발, 기능 테스트 |
+| **테스트 (test)** | AWS RDS 개발 서버 | `wordle_test` | 통합 테스트, CI/CD |
+| **프로덕션 (prod)** | AWS RDS 프로덕션 서버 | `wordle_prod` | 실제 서비스 운영 |
+
+#### 환경변수 설정
+
+```bash
+# .env.dev (개발 환경)
+AWS_DEV_DB_URL=jdbc:postgresql://your-dev-rds-endpoint.region.rds.amazonaws.com:5432/wordle_dev
+AWS_DEV_DB_USERNAME=wordle_dev_user
+AWS_DEV_DB_PASSWORD=your_dev_password_here
+
+# .env.test (테스트 환경)
+AWS_TEST_DB_URL=jdbc:postgresql://your-dev-rds-endpoint.region.rds.amazonaws.com:5432/wordle_test
+AWS_TEST_DB_USERNAME=wordle_test_user
+AWS_TEST_DB_PASSWORD=your_test_password_here
+
+# .env.prod (프로덕션 환경)
+AWS_PROD_DB_URL=jdbc:postgresql://your-prod-rds-endpoint.region.rds.amazonaws.com:5432/wordle_prod
+AWS_PROD_DB_USERNAME=wordle_prod_user
+AWS_PROD_DB_PASSWORD=your_secure_prod_password_here
+```
+
+#### AWS RDS 보안 그룹 설정
+
+AWS 콘솔에서 다음 설정이 필요합니다:
+
+1. **RDS → 데이터베이스** → 인스턴스 선택
+2. **연결 및 보안** → VPC 보안 그룹 클릭
+3. **인바운드 규칙 편집**
+4. **규칙 추가**: PostgreSQL (포트 5432), 소스: 내 IP 또는 개발팀 IP
+
+#### 연결 테스트
+
+```bash
+# 네트워크 연결 확인
+telnet your-rds-endpoint 5432
+
+# 데이터베이스 직접 접속
+psql -h your-rds-endpoint -p 5432 -U wordle_dev_user -d wordle_dev
+
+# 애플리케이션 헬스체크
+curl http://localhost:8080/actuator/health/db
+```
+
+### Docker Compose 설정
+
+#### 로컬 DB 사용 (기본)
+```bash
+# 로컬 PostgreSQL 컨테이너 사용
+docker compose up --build
+```
+
+#### AWS RDS 사용
+```bash
+# AWS RDS 연결 (환경별)
+docker compose -f docker-compose.aws.yml --env-file .env.dev up --build
+docker compose -f docker-compose.aws.yml --env-file .env.test up --build
+docker compose -f docker-compose.aws.yml --env-file .env.prod up --build
 ```
 
 ---
@@ -496,7 +632,33 @@ docker compose exec backend jcmd 1 GC.run_finalization
 
 ---
 
-## 🚢 배포
+## � 추가 문서
+
+프로젝트와 관련된 상세 문서들:
+
+### 🔧 설정 가이드
+- **[AWS_DATABASE_SETUP.md](./AWS_DATABASE_SETUP.md)** - AWS RDS 연결 및 설정 가이드
+- **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - 환경별 구성 상세 가이드
+
+### 🏗️ 아키텍처 문서
+- **[docs/SECURITY-IMPROVEMENTS.md](./docs/SECURITY-IMPROVEMENTS.md)** - 보안 개선사항 및 설정
+
+### 🐳 Docker 설정
+- **[docker-compose.yml](./docker-compose.yml)** - 로컬 개발용 (PostgreSQL 포함)
+- **[docker-compose.aws.yml](./docker-compose.aws.yml)** - AWS RDS 연결용
+- **[Dockerfile](./Dockerfile)** - 멀티 아키텍처 지원 빌드
+
+### 📋 주요 변경사항
+
+| 날짜 | 변경사항 | 브랜치 |
+|------|----------|--------|
+| 2025.08.24 | AWS RDS 연결 지원 및 환경별 설정 분리 | `seungbeom/db-server` |
+| 2025.08.18 | OAuth2 설정 구조화 및 보안 개선 | `seungbeom/db-server` |
+| 2025.08.12 | WebFlux → Spring MVC 마이그레이션 | `develop` |
+
+---
+
+## �🚢 배포
 
 ### Docker 프로덕션 빌드
 

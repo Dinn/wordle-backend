@@ -37,13 +37,13 @@ import java.util.*
 @Configuration
 class AuthorizationServerConfig {
 
-    @Value("\${spring.security.oauth2.authorizationserver.key-store}")
+    @Value("\${spring.security.oauth2.authorizationserver.jwt.keystore.location}")
     private lateinit var keyStoreLocation: Resource
 
-    @Value("\${spring.security.oauth2.authorizationserver.key-store-password}")
+    @Value("\${spring.security.oauth2.authorizationserver.jwt.keystore.password}")
     private lateinit var keyStorePassword: String
 
-    @Value("\${spring.security.oauth2.authorizationserver.key-alias}")
+    @Value("\${spring.security.oauth2.authorizationserver.jwt.keystore.alias}")
     private lateinit var keyAlias: String
 
     /** OAuth2 인증 서버 전용 시큐리티 필터 체인 */

@@ -61,8 +61,6 @@ services:
       - ./:/workspace
       # Gradle 캐시 공유로 빌드 속도 향상
       - gradle_cache:/home/gradle/.gradle
-      # entrypoint 스크립트 마운트
-      - ./docker/entrypoint.sh:/app/entrypoint.sh:ro
       
     healthcheck:                 # Actuator 사용 (8080/actuator/health)
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
@@ -75,7 +73,7 @@ services:
       - wordle-net
     ports:
       - "${SERVER_PORT:-8080}:8080"
-    entrypoint: ["sh", "/app/entrypoint.sh"]
+    # entrypoint: ["sh", "/app/entrypoint.sh"]  # Dockerfile ENTRYPOINT 사용
 
   # ---------- ② 로컬 DB (선택사항 - 로컬 테스트용) ----------
   # AWS 연결 시에는 주석 처리하고 사용

@@ -23,6 +23,9 @@ FROM --platform=${TARGETPLATFORM} eclipse-temurin:21-jdk
 # 명시적 라이선스 라벨(SBOM · 리뷰 용이)
 LABEL org.opencontainers.image.licenses="EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0"
 
+# PostgreSQL 클라이언트 설치 추가
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # 빌드한 JAR 복사

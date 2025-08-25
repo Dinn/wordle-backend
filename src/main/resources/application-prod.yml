@@ -2,9 +2,9 @@
 spring:
   datasource:
     # AWS RDS 프로덕션 서버 연결 설정
-    url: ${AWS_PROD_DB_URL:jdbc:postgresql://your-prod-rds-endpoint.region.rds.amazonaws.com:5432/wordle_prod}
-    username: ${AWS_PROD_DB_USERNAME:wordle_prod_user}
-    password: ${AWS_PROD_DB_PASSWORD:your_secure_prod_password_here}
+    url: ${AWS_PROD_DB_URL}
+    username: ${AWS_PROD_DB_USERNAME}
+    password: ${AWS_PROD_DB_PASSWORD}
     
     # 프로덕션 환경 커넥션 풀 설정 (높은 성능)
     hikari:

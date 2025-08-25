@@ -2,9 +2,9 @@
 spring:
   datasource:
     # AWS RDS 개발 서버 연결 설정
-    url: ${AWS_DEV_DB_URL:jdbc:postgresql://your-dev-rds-endpoint.region.rds.amazonaws.com:5432/wordle_dev}
-    username: ${AWS_DEV_DB_USERNAME:postgres}
-    password: ${AWS_DEV_DB_PASSWORD:your_dev_password_here}
+    url: ${AWS_DEV_DB_URL}
+    username: ${AWS_DEV_DB_USERNAME}
+    password: ${AWS_DEV_DB_PASSWORD}
     
     # 커넥션 풀 설정 (AWS RDS 최적화)
     hikari:

@@ -1,64 +1,85 @@
-아래 내용을 **README.md** 에 그대로 붙여넣으면 GitHub Markdown에서 문제없이 렌더링됩니다.
-(HTML `<br>` 태그 제거 ✔)
+# 🎮 Wordle Backend
 
-````markdown
-## 1. 요구 사항
-- **Docker Desktop**  
-  - Windows 10/11 → WSL 2 백엔드 활성화  
-- **Git** (CLI)  
-- 추가 설치 불필요 ← JDK·Gradle은 이미지에 포함
+Spring Boot 3.3 + Kotlin으로 구축된 OAuth2 인증 서버를 포함한 Wordle 게임 백엔드 API입니다.
 
----
+## 🚀 환경 구축
 
-## 2. 빠른 시작 (Linux / macOS / Windows 공통)
+### 1. 환경변수 설정
 
 ```bash
-# 1) 저장소 클론
-git clone https://github.com/your-org/wordle-backend.git
-cd wordle-backend
+# 환경변수 템플릿 파일 복사
+cp .env.template .env.dev (prod, test 동일)
 
-# 2) 컨테이너 빌드 및 기동
-docker compose up --build -d      # backend(8080) + db(5432)
+# .env.dev 파일에서 다음 항목들 수정
+```
 
-# 3) 개발용 셸 진입
-docker compose exec backend bash  # 컨테이너 안으로
+**수정 필요한 항목들:**
 
-# 4) 핫리로드 서버 실행 (8081)
+```bash
+# AWS RDS 설정 (실제 값으로 변경)
+AWS_DEV_DB_URL=DB_URL
+AWS_DEV_DB_USERNAME=DB_USERNAME  
+AWS_DEV_DB_PASSWORD=DB_PASSWORD
+
+
+### 2. Docker Compose 실행
+
+```bash
+# 백그라운드로 컨테이너 실행(prod, test는 env file 이름만 바꿔서)
+docker compose --env-file .env.dev up --build -d
+
+# 로그 확인
+docker compose logs -f backend
+
+# 헬스체크 확인
+curl http://localhost:8080/actuator/health
+```
+
+---
+
+## 🔧 개발 환경
+
+### Backend 컨테이너 접속
+
+```bash
+# 컨테이너 내부 접속
+docker compose exec backend bash
+
+# 작업 디렉토리로 이동
 cd /workspace
-./gradlew bootRun --args='--server.port=8081'
+```
 
-# 5) 애플리케이션 확인
-curl http://localhost:8081/actuator/health    # {"status":"UP"}
-````
+### 핫 리로드 설정
 
-**개발 루프**
+```bash
+# 컨테이너 내부에서 개발 서버 실행 (다른 포트 사용)
+./gradlew bootRun --args='--server.port=8081 --spring.profiles.active=dev'
 
-1. 호스트에서 코드 수정 & 저장
-2. 터미널에 `Restart completed` 로그 확인 (1-2 초)
-3. 브라우저 / Postman에서 즉시 반영 확인
-
----
-
-## 3. 자주 쓰는 명령
-
-| 목적             | 명령                                                             |
-| -------------- | -------------------------------------------------------------- |
-| 컨테이너 상태        | `docker compose ps`                                            |
-| backend 로그 스트림 | `docker compose logs -f backend`                               |
-| DB CLI 접속      | `docker exec -it wordle-backend_db_1 psql -U wordle -d wordle` |
-| backend만 재빌드   | `docker compose build backend`                                 |
-| 전체 초기화         | `docker compose down -v --rmi all`                             |
+# 파일 저장 시 자동 재시작됨 (Spring Boot DevTools)
+# 브라우저에서 http://localhost:8081 접속
+```
 
 ---
 
-## 4. FAQ
+## 🗄️ 데이터베이스 접속
 
-| 질문                      | 답변                                                                            |
-| ----------------------- | ----------------------------------------------------------------------------- |
-| **8080이 이미 사용 중인데?**    | `./gradlew bootRun --args='--server.port=8081'` 명령으로 8081 포트 사용               |
-| **컨테이너에서 편집기(vim) 없어요** | `apt-get update && apt-get install -y vim` (세션 한정)                            |
-| **스키마 바뀌어 validate 실패** | `docker/postgres` 폴더에 `003_*.sql` 추가 → `docker compose down -v && up --build` |
+### 컨테이너 내부에서 PostgreSQL 접속
 
----
+```bash
+# 1. Backend 컨테이너 접속
+docker compose exec backend bash
 
-### Happy Coding! 🚀
+# 2. PostgreSQL 클라이언트로 AWS RDS 접속
+psql -h RDS_ENDPOINT \
+     -p 5432 \
+     -U DB_USERNAME \
+     -d DATABASE_NAME
+
+# 패스워드 입력: DB_PASSWORD
+```
+
+**실제 사용 시 대체할 값들:**
+- `RDS_ENDPOINT` → `.env.dev` 파일의 AWS RDS 엔드포인트
+- `DB_USERNAME` → `.env.dev` 파일의 데이터베이스 사용자명  
+- `DATABASE_NAME` → `.env.dev` 파일의 데이터베이스명
+- `DB_PASSWORD` → `.env.dev` 파일의 데이터베이스 비밀번호

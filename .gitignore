@@ -1,6 +1,9 @@
 # Gradle
 .gradle/
 build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
 
 # IntelliJ / VSCode
 .idea/
@@ -19,3 +22,60 @@ testcontainers/
 
 # OS
 .DS_Store
+
+# Kotlin compiler
+.kotlin/
+*.kotlin_module
+
+# JVM crash logs
+hs_err_pid*
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# VS Code
+.vscode/
+.history/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+*~
+
+# OAuth2 keystore (보안)
+/src/main/resources/keys/keystore.p12
+
+# Test keystore (필요시 제외)
+# /src/test/resources/test-keystore.p12
+
+# 환경변수 파일 (AWS 정보 보안)
+.env
+.env.dev
+.env.prod
+.env.test
+.env.local
+.env.*.local
+
+# AWS 설정 파일
+aws-config.properties
+application-local.yml
+
+# 데이터베이스 백업 파일
+*.sql
+*.dump

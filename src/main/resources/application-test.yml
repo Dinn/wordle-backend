@@ -1,0 +1,66 @@
+# 테스트 환경 설정 (AWS RDS 연결 - DEV와 같은 서버, 다른 DB명)
+spring:
+  datasource:
+    # AWS RDS 테스트 환경 (DEV와 같은 서버)
+    url: ${AWS_TEST_DB_URL}
+    username: ${AWS_TEST_DB_USERNAME}
+    password: ${AWS_TEST_DB_PASSWORD}
+    
+    # 커넥션 풀 설정 (테스트용 - 적은 커넥션)
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
+      
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 테스트시마다 스키마 재생성
+    show-sql: true           # 테스트에서는 SQL 로그 활성화
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # 테스트 최적화
+        connection:
+          provider_disables_autocommit: true
+        jdbc:
+          batch_size: 10
+          order_inserts: true
+          order_updates: true
+          
+  # 테스트용 보안 설정
+  security:
+    oauth2:
+      authorizationserver:
+        jwt:
+          keystore:
+            location: ${JWT_KEYSTORE_LOCATION:classpath:keystore.p12}
+            password: ${JWT_KEYSTORE_PASSWORD:changeit}
+            alias: ${JWT_KEYSTORE_ALIAS:wordle-jwt}
+
+# 테스트 환경 모니터링 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, beans, metrics
+  endpoint:
+    health:
+      show-details: always
+      
+# 테스트 환경 로깅 (상세한 디버깅)
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.example.wordle: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # AWS RDS 연결 로깅
+    com.zaxxer.hikari: DEBUG
+    org.springframework.jdbc: DEBUG
+    # 테스트 관련 로깅
+    org.springframework.test: DEBUG

@@ -1,0 +1,63 @@
+# 개발 환경 설정 (AWS RDS 연결)
+spring:
+  datasource:
+    # AWS RDS 개발 서버 연결 설정
+    url: ${AWS_DEV_DB_URL}
+    username: ${AWS_DEV_DB_USERNAME}
+    password: ${AWS_DEV_DB_PASSWORD}
+    
+    # 커넥션 풀 설정 (AWS RDS 최적화)
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
+      
+  jpa:
+    hibernate:
+      ddl-auto: update  # 개발환경에서는 update 사용
+    show-sql: true      # 개발환경에서는 SQL 로그 활성화
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # AWS RDS 연결 최적화
+        connection:
+          provider_disables_autocommit: true
+        jdbc:
+          batch_size: 25
+          order_inserts: true
+          order_updates: true
+          
+  # 보안 설정 (개발용)
+  security:
+    oauth2:
+      authorizationserver:
+        jwt:
+          keystore:
+            location: ${JWT_KEYSTORE_LOCATION:classpath:keystore.p12}
+            password: ${JWT_KEYSTORE_PASSWORD:changeit}
+            alias: ${JWT_KEYSTORE_ALIAS:wordle-jwt}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, beans, metrics, env
+  endpoint:
+    health:
+      show-details: always
+      
+# 개발환경 전용 로깅 (상세한 디버깅 정보)
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.example.wordle: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # AWS RDS 연결 로깅
+    com.zaxxer.hikari: DEBUG
+    org.springframework.jdbc: DEBUG

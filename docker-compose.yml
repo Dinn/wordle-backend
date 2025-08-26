@@ -1,4 +1,5 @@
-version: "3.9"
+# Docker Compose AWS 연결용 설정
+# 로컬 개발시 .env.dev를 생성하고 AWS 정보를 입력하세요
 
 ##########################
 # 네트워크 (자동 생성 가능)
@@ -7,70 +8,77 @@ networks:
   wordle-net:
 
 ##########################
-# 볼륨 (DB 데이터 영속)
+# 볼륨 (AWS 연결용)
 ##########################
 volumes:
-  postgres_data:          # DB 실제 데이터
   gradle_cache:           # Gradle ~/.gradle 캐시
+  postgres_local_data:    # 로컬 DB용 (선택사항)
 
 ##########################
-# 서비스 정의
+# 서비스 정의 (AWS 연결)
 ##########################
 services:
-  # ---------- ① PostgreSQL ----------
-  db:
-    image: postgres:16           # 공식 이미지 (PostgreSQL License, 무료)
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: wordle
-      POSTGRES_USER: wordle
-      POSTGRES_PASSWORD: wordle
-      TZ: Asia/Seoul
-    volumes:
-      # 디렉터리 전체를 init 폴더로 마운트
-      - ./docker/postgres/:/docker-entrypoint-initdb.d/:ro
-      # 데이터 영속 볼륨
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:                 # pg_isready 로 헬스 확인
-      test: ["CMD-SHELL", "pg_isready -U wordle -d wordle"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - wordle-net
-    ports:
-      - "5432:5432"
-
-  # ---------- ② Spring Backend ----------
+  # ---------- ① Spring Backend (AWS RDS 연결) ----------
   backend:
     build:
       context: .                 # 루트에 있는 Dockerfile 사용
       dockerfile: Dockerfile
-      # 필요 시 빌드 목표 아키텍처 지정 (CI에서 유용)
-      # platforms:
-      #   - linux/amd64
-      #   - linux/arm64
     restart: unless-stopped
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      # AWS 연결 환경변수 (환경별 .env 파일에서 로드)
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       TZ: Asia/Seoul
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/wordle
-      SPRING_DATASOURCE_USERNAME: wordle
-      SPRING_DATASOURCE_PASSWORD: wordle
-    depends_on:
-      db:
-        condition: service_healthy
+      
+      # AWS RDS 연결 정보 (환경별로 다른 변수 사용)
+      # DEV 환경
+      AWS_DEV_DB_URL: ${AWS_DEV_DB_URL:-}
+      AWS_DEV_DB_USERNAME: ${AWS_DEV_DB_USERNAME:-}
+      AWS_DEV_DB_PASSWORD: ${AWS_DEV_DB_PASSWORD:-}
+      
+      # TEST 환경 (DEV와 같은 서버, 다른 DB)
+      AWS_TEST_DB_URL: ${AWS_TEST_DB_URL:-}
+      AWS_TEST_DB_USERNAME: ${AWS_TEST_DB_USERNAME:-}
+      AWS_TEST_DB_PASSWORD: ${AWS_TEST_DB_PASSWORD:-}
+      
+      # PROD 환경 (별도 서버)
+      AWS_PROD_DB_URL: ${AWS_PROD_DB_URL:-}
+      AWS_PROD_DB_USERNAME: ${AWS_PROD_DB_USERNAME:-}
+      AWS_PROD_DB_PASSWORD: ${AWS_PROD_DB_PASSWORD:-}
+      
+      # JWT 설정
+      JWT_KEYSTORE_LOCATION: ${JWT_KEYSTORE_LOCATION:-classpath:keystore.p12}
+      JWT_KEYSTORE_PASSWORD: ${JWT_KEYSTORE_PASSWORD:-changeit}
+      JWT_KEYSTORE_ALIAS: ${JWT_KEYSTORE_ALIAS:-wordle-jwt}
+      
+      # entrypoint.sh 스크립트용 키스토어 설정
+      KEYSTORE_PATH: ${KEYSTORE_PATH:-/workspace/src/main/resources/keys/keystore.p12}
+      KEY_ALIAS: ${KEY_ALIAS:-oauth-key}
+      KEYSTORE_PW: ${KEYSTORE_PW:-changeit}
+      DNAME: ${DNAME:-CN=wordle-auth, OU=Dev, O=Wordle, L=Seoul, S=Seoul, C=KR}
+      
+      # Gradle 캐시
+      GRADLE_USER_HOME: /home/gradle/.gradle
+      
+      # AWS 리전
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
+      
     volumes:
-      # 코드 동기화 (Dev Container·핫리로드)
+      # 코드 동기화 (핫 리로드)
       - ./:/workspace
-      # Gradle 캐시 공유로 빌드 속도↑
+      # Gradle 캐시 공유로 빌드 속도 향상
       - gradle_cache:/home/gradle/.gradle
+      # entrypoint 스크립트 마운트
+      - ./docker/entrypoint.sh:/workspace/docker/entrypoint.sh:ro
+      
     healthcheck:                 # Actuator 사용 (8080/actuator/health)
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s          # AWS 연결 시간 고려하여 증가
+      
     networks:
       - wordle-net
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT:-8080}:8080"
+    entrypoint: ["sh", "/workspace/docker/entrypoint.sh"]  # Dockerfile ENTRYPOINT 사용

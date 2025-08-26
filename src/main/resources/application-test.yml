@@ -38,7 +38,7 @@ spring:
       authorizationserver:
         jwt:
           keystore:
-            location: ${JWT_KEYSTORE_LOCATION:classpath:keystore.p12}
+            location: ${JWT_KEYSTORE_LOCATION:classpath:keys/keystore.p12}
             password: ${JWT_KEYSTORE_PASSWORD:changeit}
             alias: ${JWT_KEYSTORE_ALIAS:wordle-jwt}
 

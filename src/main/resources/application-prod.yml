@@ -45,9 +45,9 @@ spring:
       authorizationserver:
         jwt:
           keystore:
-            location: ${JWT_KEYSTORE_LOCATION:classpath:keystore.p12}
+            location: ${JWT_KEYSTORE_LOCATION:classpath:keys/keystore.p12}
             password: ${JWT_KEYSTORE_PASSWORD:changeit}
-            alias: ${JWT_KEYSTORE_ALIAS:wordle-jwt}
+            alias: ${JWT_KEYSTORE_ALIAS:oauth-key}
 
 # 프로덕션 환경 모니터링 설정 (보안 강화)
 management:
